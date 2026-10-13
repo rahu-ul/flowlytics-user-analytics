@@ -1,0 +1,12 @@
+{
+  "name": "causalfunnel-analytics",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix dashboard install",
+    "build": "npm --prefix dashboard run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test && npm --prefix dashboard test",
+    "seed": "npm --prefix backend run seed"
+  }
+}

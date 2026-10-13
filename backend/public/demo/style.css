@@ -1,0 +1,9 @@
+body{font-family:system-ui,sans-serif;margin:0;color:#1f2937}
+header,main,footer{max-width:960px;margin:0 auto;padding:16px 24px}
+nav a{margin-right:16px;color:#2563eb}
+.hero{background:#eef2ff;padding:48px 24px;border-radius:12px;margin:16px 0}
+.btn{display:inline-block;background:#2563eb;color:#fff;border:0;padding:12px 20px;border-radius:8px;font-size:16px;cursor:pointer;text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+.card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-height:140px}
+.spacer{height:700px;background:linear-gradient(#fff,#f3f4f6);border-radius:12px;margin:24px 0;padding:24px}
+footer{border-top:1px solid #e5e7eb;margin-top:32px}

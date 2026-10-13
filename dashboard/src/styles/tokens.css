@@ -1,0 +1,177 @@
+/* Design tokens. Everything visual in app.css reads from these custom properties.
+   Heatmap canvas colours (--heat-*, --canvas-*) are read by HeatmapCanvas.jsx at draw time and must stay 6-digit hex. */
+:root,
+:root[data-theme='light'] {
+  /* page backdrop (soft pastel atmosphere around the app frame) */
+  --page-base: #e9e7dc;
+  --page-glow-a: #cfe6bb;
+  --page-glow-b: #f2d4b5;
+  --page-glow-opacity: 1;
+  --frame-shadow: 0 40px 90px -30px rgba(60, 55, 30, 0.35), 0 8px 24px rgba(60, 55, 30, 0.08);
+
+  /* surfaces */
+  --bg: #ebeae6; /* main panel */
+  --surface: #f9f9f7; /* cards */
+  --surface-2: #efeee9; /* quiet fills inside cards */
+  --row-hover: #f1f0eb;
+  --row-selected: #e9ece0;
+  /* text */
+  --text: #14171c;
+  --text-2: #5b5f66;
+  --ink: #14171c; /* primary pills, selected states */
+  --ink-contrast: #ffffff;
+  /* lines */
+  --border: #e2e1da;
+  --border-strong: #cdcbc1;
+  --focus: #14171c;
+
+  /* sidebar is charcoal in both themes */
+  --sidebar-bg: #171a1f;
+  --sidebar-text: #b6bac2;
+  --sidebar-text-strong: #ffffff;
+  --sidebar-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-line: rgba(255, 255, 255, 0.1);
+  --sidebar-pill: #f6f6f3;
+  --sidebar-pill-text: #14171c;
+
+  /* accent palette taken from the reference: coral, amber, lime (+ a calm blue for neutral groupings) */
+  --coral: #ee7b66;
+  --amber: #f3b84a;
+  --lime: #82dc5c;
+  --grad-view: linear-gradient(90deg, #cdeb7a 0%, #7fdc5a 100%);
+  --grad-click: linear-gradient(90deg, #f8c25c 0%, #f08f6a 100%);
+  --grad-rank: linear-gradient(90deg, #f6a08c 0%, #f4c15f 55%, #8de264 100%);
+  --tint-coral-bg: #fbe1da;
+  --tint-coral-fg: #9a3a26;
+  --tint-amber-bg: #faedcb;
+  --tint-amber-fg: #7b5509;
+  --tint-lime-bg: #e2f4d2;
+  --tint-lime-fg: #2c6618;
+  --tint-sky-bg: #dce9f3;
+  --tint-sky-fg: #2b5a7e;
+
+  /* status */
+  --danger: #a3302a;
+  --danger-subtle: #fbe9e5;
+  --danger-border: #efc6be;
+  --warning: #7b5410;
+  --warning-subtle: #f8f0d8;
+  --warning-border: #e8d6a2;
+
+  /* heatmap: sequential ramp (more clicks = hotter) and canvas chrome */
+  --heat-0: #f8d9bf;
+  --heat-1: #f08a4b;
+  --heat-2: #c2321f;
+  --heat-dot: #e4572e;
+  --canvas-bg: #ffffff;
+  --canvas-rule: #ebe9e2;
+  --canvas-label: #5b5f66;
+
+  /* elevation */
+  --shadow-card: 0 1px 2px rgba(20, 23, 28, 0.04), 0 8px 24px -12px rgba(20, 23, 28, 0.1);
+  --shadow-sheet: 0 1px 2px rgba(20, 23, 28, 0.06), 0 10px 30px -10px rgba(20, 23, 28, 0.18);
+  --shadow-pop: 0 12px 32px rgba(20, 23, 28, 0.2);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235b5f66' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='dark'] {
+  --page-base: #0b0c0e;
+  --page-glow-a: #2c4a22;
+  --page-glow-b: #4d3520;
+  --page-glow-opacity: 0.55;
+  --frame-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  --bg: #1a1d22;
+  --surface: #23272d;
+  --surface-2: #2b3037;
+  --row-hover: #292d34;
+  --row-selected: #2f3529;
+  --text: #f2f2ee;
+  --text-2: #a5a9b1;
+  --ink: #f2f2ee;
+  --ink-contrast: #14171c;
+  --border: #32363e;
+  --border-strong: #474c56;
+  --focus: #f2f2ee;
+
+  --sidebar-bg: #101215;
+  --sidebar-text: #a9adb5;
+  --sidebar-text-strong: #ffffff;
+  --sidebar-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-line: rgba(255, 255, 255, 0.09);
+  --sidebar-pill: #f2f2ee;
+  --sidebar-pill-text: #14171c;
+
+  --coral: #e5786b;
+  --amber: #e2ac45;
+  --lime: #74cc52;
+  --grad-view: linear-gradient(90deg, #a8cf5e 0%, #6bc84b 100%);
+  --grad-click: linear-gradient(90deg, #deaa48 0%, #dc7d5c 100%);
+  --grad-rank: linear-gradient(90deg, #dc8a78 0%, #deb055 55%, #77cd58 100%);
+  --tint-coral-bg: #4a2b26;
+  --tint-coral-fg: #f4ab9d;
+  --tint-amber-bg: #45381a;
+  --tint-amber-fg: #ecc979;
+  --tint-lime-bg: #2a4220;
+  --tint-lime-fg: #a9e28d;
+  --tint-sky-bg: #243849;
+  --tint-sky-fg: #9fc9e8;
+
+  --danger: #f0a499;
+  --danger-subtle: #3b2724;
+  --danger-border: #603a35;
+  --warning: #e0be74;
+  --warning-subtle: #352d19;
+  --warning-border: #5c4c25;
+
+  --heat-0: #6b4430;
+  --heat-1: #e0833f;
+  --heat-2: #ffc99d;
+  --heat-dot: #f09352;
+  --canvas-bg: #1b1e23;
+  --canvas-rule: #2c3037;
+  --canvas-label: #a5a9b1;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a5a9b1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+}
+
+:root {
+  /* typography */
+  --font-display: 'Inter Tight', Inter, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  /* type scale */
+  --fs-xs: 12.5px;
+  --fs-sm: 13.5px;
+  --fs-md: 14.5px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-section: 22px;
+  --fs-title: 40px;
+  --fs-hero: 56px;
+  --fs-metric: 42px;
+  /* shape + rhythm */
+  --r-1: 12px; /* rows, tiles, inputs inside cards */
+  --r-2: 22px; /* cards */
+  --r-frame: 32px; /* app frame + main panel */
+  --r-pill: 999px;
+  --ctl-h: 42px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --frame-gap: 28px;
+  --sidebar-w: 256px;
+  --sidebar-overlap: 32px; /* the main panel's rounded corners overlap the sidebar by this much */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (pointer: coarse) {
+  :root { --ctl-h: 46px; }
+}
