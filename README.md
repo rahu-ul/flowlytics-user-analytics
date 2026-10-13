@@ -1,15 +1,26 @@
 # Flowlytics User Analytics
 
-A small full-stack analytics app: a JavaScript tracker records `page_view` and `click` events, a Node/Express API stores them in MongoDB, and a React dashboard shows sessions, user journeys, and a click heatmap.
+Flowlytics is a full-stack user analytics application. Its JavaScript tracker records page views and clicks, groups events into visitor sessions, and sends them to a Node/Express API backed by MongoDB Atlas. The React dashboard displays session counts, ordered user journeys, and click heatmaps.
+
+## Live demo
+
+Flowlytics is deployed as a single Node.js web service on Render. The service hosts the React dashboard, API, tracker, and demo pages.
+
+- **Dashboard:** https://flowlytics-user-analytics.onrender.com/
+- **Demo tracker:** https://flowlytics-user-analytics.onrender.com/demo/index.html
+- **API health:** https://flowlytics-user-analytics.onrender.com/api/health
+- **GitHub:** https://github.com/rahu-ul/flowlytics-user-analytics
+
+The dashboard, demo tracker, and health endpoint returned HTTP 200 during the latest deployment check. A free hosting instance may take a short time to wake after inactivity.
 
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
 | Tracker | Vanilla JS (no dependencies), served by the API at `/tracker.js` |
-| Backend | Node.js 18+, Express 4, official `mongodb` driver, helmet, cors, express-rate-limit |
+| Backend | Node.js `>=18`, Express `^4.22.3`, official `mongodb` driver `^7.7.0`, helmet, cors, express-rate-limit |
 | Database | MongoDB (single `events` collection, 2 indexes) |
-| Dashboard | React 18 + Vite, plain CSS with design tokens (light/dark), hash routing, `<canvas>` heatmap |
+| Dashboard | React `^18.3.1` + Vite `^8.3.4`, plain CSS with design tokens (light/dark), hash routing, `<canvas>` heatmap |
 | Tests | `node:test`, jsdom (tracker), mingo (in-memory MongoDB query/aggregation engine) |
 
 ## Quick start
@@ -23,11 +34,11 @@ npm run build                              # builds the dashboard into dashboard
 npm start                                  # API + tracker + demo + dashboard on http://localhost:4000
 ```
 
-- Demo store (tracked): http://localhost:4000/demo/index.html
-- Dashboard: http://localhost:4000/ (Overview, Sessions, Heatmaps; light and dark theme)
+- Backend-served dashboard: http://localhost:4000/ (Overview, Sessions, Heatmaps; light and dark theme)
+- Demo store and tracker: http://localhost:4000/demo/index.html
 - Optional sample data: `npm run seed` (posts 25 synthetic sessions through the public ingest API)
 
-Dashboard dev mode with hot reload: run `npm start` in one terminal and `npm --prefix dashboard run dev` in another (http://localhost:5173, `/api` is proxied to port 4000).
+Dashboard development mode with hot reload: run `npm start` in one terminal and `npm --prefix dashboard run dev` in another. The Vite dashboard runs at http://localhost:5173 and proxies `/api` to the backend at http://localhost:4000.
 
 ### Atlas DNS resolution
 
@@ -86,13 +97,23 @@ See [docs/API.md](docs/API.md). Summary:
 
 ## Testing
 
-`npm test` runs 34 tests: validation, API routes (real Express app and the real repository pipelines), the tracker in jsdom, and the dashboard's pure logic (heatmap math and grid geometry, formatting, session summaries).
+`npm test` runs 35 tests: 19 backend tests covering validation, API routes, the real Express app, and repository pipelines, plus 16 dashboard tests covering heatmap math, grid geometry, formatting, and session summaries.
 
 The API tests run against an in-memory fake collection backed by `mingo`, which executes the repository's real queries and aggregation pipelines. This was necessary because a MongoDB server was not available in the environment where this was built. It does **not** exercise the MongoDB driver, index creation, or a real server, so run the quick start above once against a real MongoDB as a smoke test. See [docs/HANDOFF.md](docs/HANDOFF.md) for exactly what was and was not verified.
 
-## Deployment (not done)
+## Production deployment
 
-The app is a single Node service (API + tracker + demo + dashboard) plus MongoDB, so any Node host plus MongoDB Atlas works: build command `npm run install:all && npm run build`, start command `npm start`, env `MONGODB_URI`, `TRUST_PROXY=1`. Not deployed or tested on any host.
+Render runs the application as one Node.js web service. The service serves the built React dashboard, Express API, tracker, and demo pages; MongoDB Atlas stores the event documents.
+
+- **Build command:** `npm run install:all && npm run build`
+- **Start command:** `npm start`
+- **Required environment variable:** `MONGODB_URI`
+- **Recommended environment variables:** `MONGODB_DB`, `DASHBOARD_ORIGINS`, `INGEST_RATE_LIMIT_PER_MIN`, and `TRUST_PROXY=1` when Render is behind one reverse proxy
+- **Optional DNS workaround:** `MONGODB_DNS_SERVERS`, only when the deployment environment requires an approved explicit resolver
+
+Configure these values in Render's environment settings or secret environment groups. Do not commit `backend/.env` or place MongoDB credentials in this repository. The current deployment uses MongoDB Atlas and the live URLs listed above.
+
+The live dashboard, demo page, and health endpoint were checked over HTTPS. Full production event ingestion and dashboard data flow should still be smoke-tested after deployment with a disposable test session.
 
 ## Project layout
 

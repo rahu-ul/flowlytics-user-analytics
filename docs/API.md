@@ -1,6 +1,11 @@
 # API reference
 
-Base URL: the API host (default `http://localhost:4000`). All responses are JSON. Errors: `{ "error": "message" }`.
+Base URLs:
+
+- Production: `https://flowlytics-user-analytics.onrender.com`
+- Local backend: `http://localhost:4000`
+
+All responses are JSON. Errors: `{ "error": "message" }`.
 
 ## POST /api/events
 Ingest events. CORS: any origin. Content types: `application/json` or `text/plain` (JSON text). Rate limit: `INGEST_RATE_LIMIT_PER_MIN` per IP (default 600), returns 429.

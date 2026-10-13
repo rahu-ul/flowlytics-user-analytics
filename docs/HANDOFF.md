@@ -1,6 +1,15 @@
 # Handoff
 
-State as of 2026-10-13. All assignment requirements are implemented. Nothing has been deployed.
+State as of 2026-10-13. All assignment requirements are implemented. Flowlytics is deployed as a single Node.js service on Render.
+
+## Live deployment
+
+- Dashboard: https://flowlytics-user-analytics.onrender.com/
+- Demo tracker: https://flowlytics-user-analytics.onrender.com/demo/index.html
+- API health: https://flowlytics-user-analytics.onrender.com/api/health
+- Repository: https://github.com/rahu-ul/flowlytics-user-analytics
+
+The dashboard, demo page, and health endpoint returned HTTP 200 during the latest deployment check. The health response was `{ "status": "ok" }`. The live service uses MongoDB Atlas and serves the dashboard, API, tracker, and demo from the same Node process.
 
 ## What exists
 - `backend/public/tracker.js`: page_view + click tracking, localStorage session (30 min idle), batching (flush 1.5 s / 20 events / page hide via sendBeacon), SPA navigation via History API, limited retry on network failure.
@@ -9,22 +18,22 @@ State as of 2026-10-13. All assignment requirements are implemented. Nothing has
 - `backend/scripts/seed.js`: synthetic data through the public API.
 
 ## Verified (by running it)
-Items other than the dashboard unit tests and the Phase 3 browser checks described below are carried over from the earlier handoff and were not repeated in Phase 3.
-- Dashboard unit tests: 16 pass (the original 4 heatmap tests plus 12 for grid geometry, formatting and session summaries), run in the Phase 3 environment. The 18 backend tests were **not re-run in Phase 3** (backend dependencies could not be installed offline); no backend file was changed.
+- Current test run: 19 backend tests and 16 dashboard tests pass (`npm test`), 35 total.
+- Current production dashboard build passes (`npm run build`).
 - Tracker behavior in jsdom: session reuse and expiry, click page coordinates, ignoring keyboard clicks, SPA navigation, request shape.
 - API behavior through the real Express app: validation, partial batches, text/plain bodies, CORS headers, pagination, ordering, heatmap filtering, health 200/503, 404/400 paths.
 - Repository aggregation pipelines executed by `mingo` (a JS implementation of MongoDB semantics).
 - `npm run build` for the dashboard succeeds; Express serves `dashboard/dist`, `/demo/*`, and `/tracker.js`.
 - `npm run seed` against the test server ingests data that shows up in `/api/sessions` and `/api/pages`.
 - `server.js` exits with a clear error when MongoDB is unreachable.
+- The deployed Render service responds successfully on the dashboard, demo, and `/api/health` URLs listed above.
 
 ## NOT verified
-- **Any run against a real MongoDB.** No `mongod` was available. The driver calls (`insertMany`, `aggregate`, `find` with `projection`, `countDocuments`, `createIndex`) are standard, but first run needs a smoke test: start, open `/demo/index.html`, click, check the dashboard. `mingo` and MongoDB can differ in edge cases (e.g. `$facet`, `$min/$max` on dates), so confirm `GET /api/sessions` on real data.
-- **Dashboard against the real backend.** Phase 3 rendered the dashboard in headless Chromium (Playwright), but against a **mock API** that implements the shapes in `API.md`, not the Express app and MongoDB. The mock and the harness are not part of this repository. Real-data behaviour (for example how `$facet` sessions look on real events) still needs the smoke test above.
-- **`vite build` and `vite dev`.** Vite and `npm install` were not available offline, so Phase 3 bundled the same sources with esbuild (React 19 instead of the pinned 18) to check that they compile and run. Run `npm run install:all && npm run build` once to confirm the Vite build; `dashboard/vite.config.js` is unchanged. Vite-specific points to watch: `public/theme-init.js` is referenced from `index.html` as a plain `<script>` and must end up at `dist/theme-init.js`, and the two Google Fonts `<link>` tags need network access (the UI falls back to system fonts without it).
+- **Full production event flow.** The deployed health endpoint verifies that the API can ping its configured database, but a disposable production event has not been submitted and checked through the dashboard in this audit. Perform that smoke test without using personal or sensitive event data.
+- **Dashboard browser behavior against production data.** The source and pure logic tests pass, but a browser-level production-data check of navigation, live sessions, heatmap updates, and error states remains manual.
 - **Browsers other than Chromium.** Safari and Firefox were not tried. Mobile was checked with Chromium viewport and touch emulation, not a real phone.
 - **The tracker in real browsers**, including `sendBeacon` on unload (jsdom has no `sendBeacon`; only the fetch path was exercised).
-- Hosting, HTTPS, load, and behavior behind a proxy.
+- Load testing and behavior under sustained proxy traffic.
 
 ## Phase 3 (premium UI): what changed and what was found
 - Added hash routing and an Overview page; the old two-tab layout became Overview, Sessions, Heatmaps (`#/heatmap` still works). `api.js`, `hooks.js` (one helper added), the backend, tracker and demo are untouched.
@@ -41,10 +50,9 @@ See "Design decisions and trade-offs" in the README (no auth on read API, aggreg
 - No automated component or browser tests are included; the browser checks run in Phase 3 were an external script.
 
 ## Suggested next steps
-1. Smoke test on real MongoDB (above), fix anything it finds.
-2. Deploy as one Node service + Atlas; add the URL to the README.
-3. Add auth on read endpoints; add a TTL index; consider a `sessions` collection if volume grows.
-4. Add browser-level tests (Playwright) for the tracker and dashboard; the Phase 3 checks (theme persistence without flash, pagination, deep links, keyboard flow, error/empty/loading states, canvas aspect ratio, mobile navigation) are a good starting list.
+1. Submit a disposable event through the live demo and confirm it appears in the deployed dashboard.
+2. Add auth on read endpoints; add a TTL index; consider a `sessions` collection if volume grows.
+3. Add browser-level tests (Playwright) for the tracker and dashboard; the Phase 3 checks (theme persistence without flash, pagination, deep links, keyboard flow, error/empty/loading states, canvas aspect ratio, mobile navigation) are a good starting list.
 
 ## Phase 4 (visual redesign)
-UI-only restyle to a charcoal-sidebar / rounded-panel dashboard look. Changed: `dashboard/index.html` (fonts, favicon), `src/styles/*`, `components/ui/{Icon,Sidebar,ThemeToggle,States,MetricDisplay}.jsx`, `components/SessionTimeline.jsx`, the four views (markup/classes only; hooks, API calls and calculations untouched), new `src/lib/avatar.js`. Unchanged: `api.js`, `hooks.js`, `router.js`, `theme.js`, `lib/{format,heatmap,sessions}*`, backend, tracker, demo, scripts, tests. Heatmap ramp is now warm (peach to red) and the legend text says "Hotter colours". Verified in headless Chromium against a mock API (both themes, 1440/820/390px, empty/error/loading states). `vite build` and the Express-dependent backend tests were not run in that environment (npm registry unreachable); run `npm run install:all && npm test && npm run build` once locally.
+UI-only restyle to a charcoal-sidebar / rounded-panel dashboard look. Changed: `dashboard/index.html` (fonts, favicon, and Flowlytics metadata), `src/styles/*`, `components/ui/{Icon,Sidebar,ThemeToggle,States,MetricDisplay}.jsx`, `components/SessionTimeline.jsx`, the four views (markup/classes only; hooks, API calls and calculations untouched), new `src/lib/avatar.js`. Unchanged: `api.js`, `hooks.js`, `router.js`, `theme.js`, `lib/{format,heatmap,sessions}*`, backend behavior, tracker behavior, demo behavior, scripts, tests. Heatmap ramp is now warm (peach to red) and the legend text says "Hotter colours". Verified in headless Chromium against a mock API (both themes, 1440/820/390px, empty/error/loading states). The current local verification also passes `npm test` (19 backend and 16 dashboard tests) and `npm run build`.
