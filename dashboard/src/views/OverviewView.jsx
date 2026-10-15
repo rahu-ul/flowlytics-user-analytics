@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { useAsync, useReload } from '../hooks.js';
+import { useAsync, useReload, useSocketEvent, useSocketReconnect } from '../hooks.js';
 import { buildHref } from '../router.js';
 import { fmtDateTime, fmtNumber, hostPath, plural, truncateId } from '../lib/format.js';
 import { idBadge, idTint } from '../lib/avatar.js';
+import { REALTIME_EVENTS, applySessionUpdate } from '../lib/realtime.js';
 import Icon from '../components/ui/Icon.jsx';
 import MetricStrip from '../components/ui/MetricDisplay.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
@@ -10,20 +12,100 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui/States.js
 
 const PAGES_CAP = 200; // /api/pages returns at most 200 pages
 
+/**
+ * Overview View:
+ * Real-time updates:
+ * - Page views, clicks, total events, and top pages click/view distributions are updated incrementally
+ *   from real-time Socket.IO broadcasts ('analytics:event').
+ * - Recent sessions are updated live from 'analytics:session-updated'.
+ *
+ * REST-refreshed metrics:
+ * - Total distinct sessions count and server-side aggregation rankings remain authoritatively refreshed
+ *   via REST (/api/pages and /api/sessions) on load, manual refresh, and automatic reconnect recovery.
+ */
 export default function OverviewView() {
   const [reload, bump] = useReload();
   const pages = useAsync((signal) => api.pages(signal), [reload]);
   const sessions = useAsync((signal) => api.sessions(1, 6, signal), [reload]);
 
-  const list = pages.data?.pages;
+  const [livePages, setLivePages] = useState(null);
+  const [liveRecentSessions, setLiveRecentSessions] = useState(null);
+  const [liveSessionCount, setLiveSessionCount] = useState(null);
+
+  // Sync with REST data
+  useEffect(() => {
+    if (pages.data?.pages) {
+      setLivePages(pages.data.pages);
+    }
+  }, [pages.data]);
+
+  useEffect(() => {
+    if (sessions.data?.sessions) {
+      setLiveRecentSessions(sessions.data.sessions);
+      setLiveSessionCount(sessions.data.total);
+    }
+  }, [sessions.data]);
+
+  // Real-time event incremental updates (page views & clicks)
+  useSocketEvent(REALTIME_EVENTS.EVENT, (event) => {
+    if (!event || !event.pagePath) return;
+
+    setLivePages((current) => {
+      const base = current ?? (pages.data?.pages || []);
+      const idx = base.findIndex((p) => p.pagePath === event.pagePath);
+
+      if (idx >= 0) {
+        return base.map((p, i) => {
+          if (i !== idx) return p;
+          return {
+            ...p,
+            pageViews: event.type === 'page_view' ? p.pageViews + 1 : p.pageViews,
+            clicks: event.type === 'click' ? p.clicks + 1 : p.clicks,
+            lastSeen: event.timestamp || new Date().toISOString(),
+          };
+        }).sort((a, b) => b.clicks - a.clicks);
+      }
+
+      // If new page tracked
+      const newPage = {
+        pagePath: event.pagePath,
+        pageViews: event.type === 'page_view' ? 1 : 0,
+        clicks: event.type === 'click' ? 1 : 0,
+        lastSeen: event.timestamp || new Date().toISOString(),
+      };
+      return [...base, newPage].sort((a, b) => b.clicks - a.clicks).slice(0, PAGES_CAP);
+    });
+  });
+
+  // Real-time recent session update
+  useSocketEvent(REALTIME_EVENTS.SESSION_UPDATED, (payload) => {
+    if (!payload || !payload.sessionId) return;
+
+    setLiveRecentSessions((current) => {
+      const base = current ?? (sessions.data?.sessions || []);
+      const res = applySessionUpdate(base, payload);
+      if (res.isNew) {
+        setLiveSessionCount((c) => (c !== null ? c + 1 : c));
+      }
+      return res.sessions.slice(0, 6);
+    });
+  });
+
+  // Targeted recovery on reconnect
+  useSocketReconnect(bump);
+
+  const list = livePages ?? pages.data?.pages;
+  const recentSessionsList = liveRecentSessions ?? sessions.data?.sessions;
+  const sessionTotal = liveSessionCount ?? sessions.data?.total;
+
   const pageViews = list ? list.reduce((n, p) => n + p.pageViews, 0) : undefined;
   const clicks = list ? list.reduce((n, p) => n + p.clicks, 0) : undefined;
   const capped = list && list.length >= PAGES_CAP;
-  const nothingYet = sessions.data && pages.data && sessions.data.total === 0 && list.length === 0;
+  const nothingYet = sessions.data && pages.data && sessionTotal === 0 && (!list || list.length === 0);
 
   const events = list ? pageViews + clicks : pages.error ? null : undefined;
   const metrics = [
-    { label: 'Sessions', icon: 'sessions', tint: 'sky', value: pages.error || sessions.error ? (sessions.data?.total ?? null) : sessions.data?.total, hint: 'Renewed after 30 minutes idle' },
+    { label: 'Sessions', icon: 'sessions', tint: 'sky', value: pages.error || sessions.error ? (sessionTotal ?? null) : sessionTotal, hint: 'Renewed after 30 minutes idle' },
     { label: 'Page views', icon: 'page', tint: 'lime', value: list ? pageViews : pages.error ? null : undefined, hint: 'Recorded on each page load' },
     { label: 'Clicks', icon: 'click', tint: 'coral', value: list ? clicks : pages.error ? null : undefined, hint: 'Recorded with coordinates' },
     { label: 'Tracked pages', icon: 'globe', tint: 'amber', value: list ? list.length : pages.error ? null : undefined, hint: capped ? `Capped at ${PAGES_CAP} by the API` : 'Pages with recorded activity' },
@@ -31,7 +113,6 @@ export default function OverviewView() {
 
   const top = list ? list.slice(0, 6) : [];
   const maxClicks = Math.max(1, ...top.map((p) => p.clicks));
-  // Width of each segment in the composition bar is its share of the real event total (no estimates).
   const total = list ? pageViews + clicks : 0;
   const viewShare = total > 0 ? (pageViews / total) * 100 : 0;
   const clickShare = total > 0 ? (clicks / total) * 100 : 0;
@@ -120,10 +201,10 @@ export default function OverviewView() {
                 <a className="pill-link" href={buildHref(['sessions'])}>All sessions <Icon name="next" size={14} /></a>
               </div>
               {sessions.loading && !sessions.data && <LoadingState rows={6} label="Loading sessions" />}
-              {sessions.data && sessions.data.sessions.length === 0 && <p className="quiet">No sessions recorded yet.</p>}
-              {sessions.data && sessions.data.sessions.length > 0 && (
+              {recentSessionsList && recentSessionsList.length === 0 && <p className="quiet">No sessions recorded yet.</p>}
+              {recentSessionsList && recentSessionsList.length > 0 && (
                 <ol className="session-list" aria-label="Most recently active sessions">
-                  {sessions.data.sessions.map((s) => (
+                  {recentSessionsList.map((s) => (
                     <li key={s.sessionId}>
                       <a className="session-item" href={buildHref(['sessions', s.sessionId])} title={s.sessionId}>
                         <span className={`avatar tint-${idTint(s.sessionId)}`} aria-hidden="true">{idBadge(s.sessionId)}</span>

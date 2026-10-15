@@ -21,3 +21,5 @@ export function useReload() {
   const [n, setN] = useState(0);
   return [n, () => setN((v) => v + 1)];
 }
+
+export { useSocketStatus, useSocketEvent, useSocketReconnect } from './useSocket.js';

@@ -7,12 +7,15 @@ async function get(path, signal) {
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
     try { message = (await res.json()).error || message; } catch { /* non-JSON error body */ }
-    throw new Error(message);
+    const err = new Error(message);
+    err.status = res.status; // lets callers tell "not found" from a real failure
+    throw err;
   }
   return res.json();
 }
 
 export const api = {
+  health: (signal) => get('/api/health', signal),
   sessions: (page, limit, signal) => get(`/api/sessions?page=${page}&limit=${limit}`, signal),
   sessionEvents: (id, signal) => get(`/api/sessions/${encodeURIComponent(id)}/events`, signal),
   pages: (signal) => get('/api/pages', signal),

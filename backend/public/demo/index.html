@@ -4,24 +4,183 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Demo Store — Home</title>
+  <meta name="description" content="Demo Store: a sample storefront used to demonstrate Flowlytics tracking.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f5d46'/%3E%3Ctext x='16' y='22' font-size='18' font-family='serif' font-weight='700' text-anchor='middle' fill='white'%3ED%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/demo/style.css">
   <script src="/tracker.js" defer></script>
+  <script src="/demo/store.js" defer></script>
 </head>
 <body>
-  <header><nav><a href="/demo/index.html">Home</a><a href="/demo/pricing.html">Pricing</a></nav></header>
-  <main>
-    <section class="hero">
-      <h1>Demo Store</h1>
-      <p>Click around this page, scroll, and visit Pricing. Then open the dashboard.</p>
-      <button class="btn" id="cta">Shop now</button>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="brand" href="/demo/index.html"><span class="mark" aria-hidden="true">D</span><span class="brand-name">Demo Store</span></a>
+      <nav class="site-nav" id="site-nav" aria-label="Store">
+        <a href="/demo/index.html#shop" aria-current="page">Shop</a>
+        <a href="/demo/index.html#story">Our story</a>
+        <a href="/demo/pricing.html">Pricing</a>
+      </nav>
+      <div class="tools">
+        <label class="search"><span class="sr-only">Search products</span><input type="search" id="q" placeholder="Search products" autocomplete="off" enterkeyhint="search"><button type="button" class="search-clear" id="q-clear" aria-label="Clear search" hidden>&times;</button></label>
+        <button type="button" class="cart" id="cart" aria-label="Cart, 0 items"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 4h2.2l2 11h10.4l2-8H6.4"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg><span class="cart-label">Cart</span> <span class="cart-count" id="cart-count" aria-hidden="true">0</span></button>
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="i-open" d="M4 7h16M4 12h16M4 17h16"/><path class="i-close" d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">New arrivals</p>
+        <h1 id="hero-title">Gear for early starts and long days.</h1>
+        <p class="lede">Everyday outdoor basics, made to be used hard. Browse the range, open a product, and add what you like to your cart.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#shop" id="hero-cta">Shop new arrivals</a>
+          <a class="btn" href="#story">Our story</a>
+        </div>
+      </div>
+      <figure class="hero-art"><img src="/demo/img/hero.svg" alt="Illustration of green mountain ridges beneath a pale sun" width="1200" height="1000" fetchpriority="high" decoding="async"></figure>
     </section>
-    <section class="grid">
-      <div class="card"><h3>Sneakers</h3><button class="btn">Add to cart</button></div>
-      <div class="card"><h3>Backpack</h3><button class="btn">Add to cart</button></div>
-      <div class="card"><h3>Watch</h3><button class="btn">Add to cart</button></div>
+
+    <section class="section wrap" id="shop" aria-labelledby="shop-title">
+      <div class="section-head">
+        <div><p class="eyebrow">The range</p><h2 id="shop-title">New arrivals</h2></div>
+        <p class="result-count" id="result-count" role="status" aria-live="polite">6 products</p>
+      </div>
+      <div class="filters" role="group" aria-label="Filter by category">
+        <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="chip" data-filter="footwear" aria-pressed="false">Footwear</button>
+        <button type="button" class="chip" data-filter="bags" aria-pressed="false">Bags</button>
+        <button type="button" class="chip" data-filter="accessories" aria-pressed="false">Accessories</button>
+        <button type="button" class="chip" data-filter="apparel" aria-pressed="false">Apparel</button>
+      </div>
+      <div class="products">
+        <article class="product" data-id="aero-runner" data-name="Aero Runner" data-category="footwear" data-price="$89" data-desc="Lightweight road and trail sneaker with a recycled-mesh upper, a 6 mm drop and a grippy outsole." data-image="/demo/img/aero-runner.svg" data-alt="Side view of a forest-green running shoe with a cream sole and a yellow accent stripe">
+          <div class="tile" data-label="Aero Runner"><img src="/demo/img/aero-runner.svg" alt="Side view of a forest-green running shoe with a cream sole and a yellow accent stripe" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Footwear</p>
+            <h3 class="product-name">Aero Runner</h3>
+            <p class="price">$89</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Aero Runner">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Aero Runner to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+        <article class="product" data-id="daypack" data-name="Daypack 24L" data-category="bags" data-price="$64" data-desc="A weather-resistant 24 litre pack with a padded laptop sleeve, hidden pocket and sternum strap." data-image="/demo/img/daypack.svg" data-alt="Forest-green 24 litre daypack with a front pocket and a yellow zip pull">
+          <div class="tile" data-label="Daypack 24L"><img src="/demo/img/daypack.svg" alt="Forest-green 24 litre daypack with a front pocket and a yellow zip pull" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Bags</p>
+            <h3 class="product-name">Daypack 24L</h3>
+            <p class="price">$64</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Daypack 24L">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Daypack 24L to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+        <article class="product" data-id="field-watch" data-name="Field Watch" data-category="accessories" data-price="$129" data-desc="Sapphire-glass field watch with a 40 mm case, 100 m water resistance and a quick-release strap." data-image="/demo/img/field-watch.svg" data-alt="Field watch with a cream dial, black case and a rust-coloured strap">
+          <div class="tile" data-label="Field Watch"><img src="/demo/img/field-watch.svg" alt="Field watch with a cream dial, black case and a rust-coloured strap" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Accessories</p>
+            <h3 class="product-name">Field Watch</h3>
+            <p class="price">$129</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Field Watch">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Field Watch to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+        <article class="product" data-id="trail-bottle" data-name="Trail Bottle" data-category="accessories" data-price="$24" data-desc="Insulated 750 ml steel bottle that keeps drinks cold for 24 hours or hot for 12." data-image="/demo/img/trail-bottle.svg" data-alt="Green insulated steel bottle with a black cap and a yellow band">
+          <div class="tile" data-label="Trail Bottle"><img src="/demo/img/trail-bottle.svg" alt="Green insulated steel bottle with a black cap and a yellow band" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Accessories</p>
+            <h3 class="product-name">Trail Bottle</h3>
+            <p class="price">$24</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Trail Bottle">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Trail Bottle to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+        <article class="product" data-id="merino-socks" data-name="Merino Crew Socks" data-category="apparel" data-price="$18" data-desc="Mid-weight merino blend with a cushioned heel and a seamless toe. Sold as a pair." data-image="/demo/img/merino-socks.svg" data-alt="A pair of oatmeal merino crew socks with green cuffs and rust heels">
+          <div class="tile" data-label="Merino Crew Socks"><img src="/demo/img/merino-socks.svg" alt="A pair of oatmeal merino crew socks with green cuffs and rust heels" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Apparel</p>
+            <h3 class="product-name">Merino Crew Socks</h3>
+            <p class="price">$18</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Merino Crew Socks">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Merino Crew Socks to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+        <article class="product" data-id="rain-shell" data-name="Packable Rain Shell" data-category="apparel" data-price="$119" data-desc="A 2.5-layer waterproof shell that folds into its own pocket and weighs under 300 g." data-image="/demo/img/rain-shell.svg" data-alt="Rust-coloured hooded rain shell with a centre zip and two chest pockets">
+          <div class="tile" data-label="Packable Rain Shell"><img src="/demo/img/rain-shell.svg" alt="Rust-coloured hooded rain shell with a centre zip and two chest pockets" width="800" height="600" loading="lazy" decoding="async"></div>
+          <div class="product-body">
+            <p class="product-meta">Apparel</p>
+            <h3 class="product-name">Packable Rain Shell</h3>
+            <p class="price">$119</p>
+            <div class="product-actions">
+              <button type="button" class="btn btn-sm" data-view aria-label="View details: Packable Rain Shell">View details</button>
+              <button type="button" class="btn btn-sm btn-primary" data-add aria-label="Add Packable Rain Shell to cart">Add to cart</button>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="no-results" id="no-results" hidden>
+        <p class="no-title">No products match your search.</p>
+        <p>Try a different word, or clear the filters to see everything.</p>
+        <button type="button" class="btn btn-sm" id="clear-filters">Clear filters</button>
+      </div>
     </section>
-    <section class="spacer"><h2>Scroll area</h2><p>Clicks down here are recorded with page (not viewport) coordinates.</p></section>
+
+    <section class="section wrap" aria-label="Why shop with us">
+      <div class="perks">
+        <div class="perk"><h3>Free returns</h3><p>Send anything back within 60 days, no questions asked.</p></div>
+        <div class="perk"><h3>Repairs for life</h3><p>We re-stitch, re-sole and re-zip our gear instead of replacing it.</p></div>
+        <div class="perk"><h3>Carbon-aware shipping</h3><p>Orders leave in a single box and travel by ground wherever possible.</p></div>
+      </div>
+    </section>
+
+    <section class="story wrap" id="story" aria-labelledby="story-title">
+      <figure class="story-art"><img src="/demo/img/story.svg" alt="Illustration of a still lake below green hills" width="1000" height="800" loading="lazy" decoding="async"></figure>
+      <div class="story-copy">
+        <p class="eyebrow">Our story</p>
+        <h2 id="story-title">Built for the ordinary days</h2>
+        <p>Demo Store started as a weekend project: one pair of shoes that survived a wet commute, and a pack that fit a laptop and a lunch.</p>
+        <p>Every product is tested by the people who sell it. If it does not last, it does not ship.</p>
+      </div>
+    </section>
+
+    <section class="wrap" aria-labelledby="cta-title">
+      <div class="cta">
+        <h2 id="cta-title">Hear about new arrivals first</h2>
+        <p>Join the sample list and we will tell you when the next drop lands.</p>
+        <button type="button" class="btn" id="cta-button">Join the list</button>
+        <p class="cta-note" id="cta-note" role="status" aria-live="polite"></p>
+      </div>
+    </section>
   </main>
-  <footer>© Demo Store</footer>
+  <footer class="site-footer">
+    <div class="wrap foot">
+      <div class="foot-brand"><span class="mark" aria-hidden="true">D</span><div><strong>Demo Store</strong><p>Everyday outdoor basics, made to be used hard.</p></div></div>
+      <nav class="foot-nav" aria-label="Footer"><a href="/demo/index.html#shop">Shop</a><a href="/demo/index.html#story">Our story</a><a href="/demo/pricing.html">Pricing</a></nav>
+      <p class="foot-note">&copy; Demo Store. A sample storefront for the Flowlytics demo. Nothing here is for sale.</p>
+    </div>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="product-dialog" aria-labelledby="dialog-name">
+    <button type="button" class="dialog-x" id="dialog-close" aria-label="Close product details"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dialog-tile tile" id="dialog-tile"><img id="dialog-image" alt="" width="800" height="600" decoding="async"></div>
+    <div class="dialog-body">
+      <p class="product-meta" id="dialog-category"></p>
+      <h2 id="dialog-name"></h2>
+      <p class="price" id="dialog-price"></p>
+      <p class="desc" id="dialog-desc"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-primary" id="dialog-add">Add to cart</button>
+      </div>
+    </div>
+  </dialog>
 </body>
 </html>

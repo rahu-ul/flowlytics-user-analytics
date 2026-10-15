@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api.js';
-import { useAsync, useReload } from '../hooks.js';
+import { useAsync, useReload, useSocketEvent, useSocketReconnect } from '../hooks.js';
 import { fmtDateTime, fmtDuration, fmtNumber } from '../lib/format.js';
 import { summarizeEvents } from '../lib/sessions.js';
+import { REALTIME_EVENTS, mergeTimelineEvent } from '../lib/realtime.js';
 import Icon from '../components/ui/Icon.jsx';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States.jsx';
 import SessionTimeline from '../components/SessionTimeline.jsx';
@@ -22,7 +23,49 @@ function CopyId({ id }) {
 export default function SessionDetail({ sessionId, closeHref }) {
   const [reload, bump] = useReload();
   const { data, error, loading } = useAsync((signal) => api.sessionEvents(sessionId, signal), [sessionId, reload]);
-  const current = data && data.sessionId === sessionId ? data : null;
+  const [liveEvents, setLiveEvents] = useState(null);
+  const bufferedEventsRef = useRef([]);
+
+  // Sync with REST response and replay any events buffered while loading
+  useEffect(() => {
+    if (data && data.sessionId === sessionId) {
+      let events = data.events || [];
+      if (bufferedEventsRef.current.length > 0) {
+        for (const buffered of bufferedEventsRef.current) {
+          events = mergeTimelineEvent(events, buffered, sessionId);
+        }
+        bufferedEventsRef.current = [];
+      }
+      setLiveEvents(events);
+    }
+  }, [data, sessionId]);
+
+  // Clear live events when switching sessions
+  useEffect(() => {
+    setLiveEvents(null);
+    bufferedEventsRef.current = [];
+  }, [sessionId]);
+
+  // Append live events for this session
+  useSocketEvent(
+    REALTIME_EVENTS.EVENT,
+    (event) => {
+      if (!event || event.sessionId !== sessionId) return;
+
+      if (loading || !liveEvents) {
+        bufferedEventsRef.current.push(event);
+      } else {
+        setLiveEvents((prev) => mergeTimelineEvent(prev || [], event, sessionId));
+      }
+    },
+    [sessionId, loading, Boolean(liveEvents)],
+  );
+
+  // Recovery on reconnect
+  useSocketReconnect(bump);
+
+  const events = liveEvents ?? (data && data.sessionId === sessionId ? data.events : null);
+  const current = data && data.sessionId === sessionId && events ? { ...data, events } : null;
   const summary = useMemo(() => (current ? summarizeEvents(current.events) : null), [current]);
 
   useEffect(() => {

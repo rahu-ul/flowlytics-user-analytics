@@ -18,6 +18,8 @@ function loadConfig(env = process.env) {
       .map((s) => s.trim())
       .filter(Boolean),
     ingestRateLimitPerMin: toInt(env.INGEST_RATE_LIMIT_PER_MIN, 600),
+    // Upper bound on simultaneously connected dashboard sockets (Socket.IO). The endpoint has no authentication.
+    realtimeMaxClients: toInt(env.REALTIME_MAX_CLIENTS, 200),
     trustProxy: env.TRUST_PROXY ? toInt(env.TRUST_PROXY, 1) : false,
   };
 }

@@ -11,14 +11,19 @@ const { analyticsRouter } = require('./routes/analytics');
 
 /**
  * Builds the Express app. Dependencies are injected so tests can use a fake repository.
+ * `publisher` (optional) receives events MongoDB has confirmed as stored; see publisher.js.
  */
-function createApp({ repo, config, logger = console }) {
+function createApp({ repo, config, logger = console, publisher }) {
   const app = express();
   if (config.trustProxy) app.set('trust proxy', config.trustProxy);
   app.disable('x-powered-by');
 
   // CORP is disabled because tracker.js must be loadable from third-party origins.
   app.use(helmet({ crossOriginResourcePolicy: false }));
+
+  // Redirect /demo and /demo/ before express.static so we control the status code (302, not 301).
+  // express.static would intercept the /demo directory and issue its own 301 to /demo/.
+  app.get(['/demo', '/demo/'], (_req, res) => res.redirect(302, '/demo/index.html'));
 
   // Tracker script and demo pages.
   app.use(
@@ -43,7 +48,7 @@ function createApp({ repo, config, logger = console }) {
       message: { error: 'rate limit exceeded' },
     }),
     jsonBody,
-    ingestRouter({ repo }),
+    ingestRouter({ repo, publisher, logger }),
   );
 
   app.use('/api', cors({ origin: config.dashboardOrigins, methods: ['GET'] }));

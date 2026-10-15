@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { useAsync, useReload } from '../hooks.js';
+import { useAsync, useReload, useSocketEvent, useSocketReconnect } from '../hooks.js';
 import { navigate } from '../router.js';
 import { useTheme } from '../theme.js';
 import { binPoints, buildHeatPoints, describeCell, gridFor, topCells } from '../lib/heatmap.js';
 import { fmtDateTime, fmtNumber, hostPath, plural } from '../lib/format.js';
+import { REALTIME_EVENTS, mergeHeatmapClicks } from '../lib/realtime.js';
 import Icon from '../components/ui/Icon.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
 import SegmentedControl from '../components/ui/SegmentedControl.jsx';
@@ -30,7 +31,50 @@ export default function HeatmapView({ route }) {
     (signal) => (url ? api.heatmap(url, signal).then((d) => ({ ...d, requestedFor: url })) : Promise.resolve(null)),
     [url, reload],
   );
-  const result = heat.data && heat.data.requestedFor === url ? heat.data : null;
+
+  const [liveClicks, setLiveClicks] = useState(null);
+  const [liveTotal, setLiveTotal] = useState(null);
+
+  // Sync with REST response when it loads
+  useEffect(() => {
+    if (heat.data && heat.data.requestedFor === url) {
+      setLiveClicks(heat.data.clicks);
+      setLiveTotal(heat.data.total);
+    }
+  }, [heat.data, url]);
+
+  // Clear live clicks when switching page
+  useEffect(() => {
+    setLiveClicks(null);
+    setLiveTotal(null);
+  }, [url]);
+
+  // Real-time batch click update for this page
+  useSocketEvent(
+    REALTIME_EVENTS.HEATMAP_UPDATED,
+    (payload) => {
+      if (!payload || payload.pagePath !== url || !Array.isArray(payload.clicks)) return;
+      setLiveClicks((prev) => {
+        const base = prev ?? (heat.data && heat.data.requestedFor === url ? heat.data.clicks : []);
+        const merged = mergeHeatmapClicks(base, payload.clicks, url);
+        const addedCount = merged.length - base.length;
+        if (addedCount > 0) {
+          setLiveTotal((t) => (t !== null ? t + addedCount : addedCount));
+        }
+        return merged;
+      });
+    },
+    [url, heat.data],
+  );
+
+  // Recovery on reconnect
+  useSocketReconnect(bump);
+
+  const clicks = liveClicks ?? (heat.data && heat.data.requestedFor === url ? heat.data.clicks : null);
+  const totalClicks = liveTotal ?? (heat.data && heat.data.requestedFor === url ? heat.data.total : 0);
+  const result = clicks !== null && heat.data && heat.data.requestedFor === url
+    ? { ...heat.data, clicks, total: totalClicks }
+    : null;
 
   const model = useMemo(() => {
     if (!result || result.clicks.length === 0) return null;

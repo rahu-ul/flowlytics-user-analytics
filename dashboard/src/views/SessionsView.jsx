@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { useAsync, useReload } from '../hooks.js';
+import { useAsync, useReload, useSocketEvent, useSocketReconnect } from '../hooks.js';
 import { buildHref } from '../router.js';
 import { fmtDateTime, fmtDuration, fmtNumber, truncateId } from '../lib/format.js';
 import { idBadge, idTint } from '../lib/avatar.js';
+import { REALTIME_EVENTS, applySessionUpdate } from '../lib/realtime.js';
 import Icon from '../components/ui/Icon.jsx';
 import PageHeader from '../components/ui/PageHeader.jsx';
 import Pager from '../components/ui/Pager.jsx';
@@ -21,9 +22,51 @@ export default function SessionsView({ route }) {
   // Event total across all sessions = page views + clicks over all tracked pages (same figure the Overview shows).
   const totals = useAsync((signal) => api.pages(signal).catch(() => null), [reload]);
 
-  const data = list.data;
+  const [liveSessions, setLiveSessions] = useState(null);
+  const [liveTotal, setLiveTotal] = useState(null);
+  const [liveEventTotalDelta, setLiveEventTotalDelta] = useState(0);
+
+  // Sync with REST data on initial fetch or refetch
+  useEffect(() => {
+    if (list.data) {
+      setLiveSessions(list.data.sessions);
+      setLiveTotal(list.data.total);
+      setLiveEventTotalDelta(0);
+    }
+  }, [list.data]);
+
+  // Real-time incremental session update
+  useSocketEvent(REALTIME_EVENTS.SESSION_UPDATED, (payload) => {
+    if (!payload || !payload.sessionId) return;
+
+    setLiveSessions((current) => {
+      if (!current) return current;
+      const res = applySessionUpdate(current, payload);
+      if (res.found) {
+        return res.sessions;
+      }
+      if (res.isNew && page === 1) {
+        setLiveTotal((t) => (t !== null ? t + 1 : t));
+        return res.sessions.slice(0, PAGE_SIZE);
+      }
+      return current;
+    });
+
+    if (payload.delta?.eventCount) {
+      setLiveEventTotalDelta((d) => d + payload.delta.eventCount);
+    }
+  });
+
+  // Targeted REST recovery on reconnect
+  useSocketReconnect(bump);
+
+  const sessions = liveSessions ?? list.data?.sessions;
+  const total = liveTotal ?? list.data?.total;
+  const data = sessions && total !== undefined ? { sessions, total, page, limit: PAGE_SIZE } : list.data;
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
-  const eventTotal = totals.data ? totals.data.pages.reduce((n, p) => n + p.pageViews + p.clicks, 0) : null;
+  const baseEventTotal = totals.data ? totals.data.pages.reduce((n, p) => n + p.pageViews + p.clicks, 0) : null;
+  const eventTotal = baseEventTotal !== null ? baseEventTotal + liveEventTotalDelta : null;
 
   const listHref = (p = page) => buildHref(['sessions'], { page: p > 1 ? p : undefined });
   const rowHref = (id) => buildHref(['sessions', id], { page: page > 1 ? page : undefined });

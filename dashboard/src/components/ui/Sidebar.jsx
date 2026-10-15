@@ -1,11 +1,13 @@
 import { buildHref } from '../../router.js';
 import Icon from './Icon.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import ConnectionStatus from './ConnectionStatus.jsx';
 
 export const NAV = [
   { id: 'overview', label: 'Overview', icon: 'overview' },
   { id: 'sessions', label: 'Sessions', icon: 'sessions' },
   { id: 'heatmaps', label: 'Heatmaps', icon: 'heatmap' },
+  { id: 'demo', label: 'Demo', icon: 'play' },
 ];
 
 // Host the dashboard is talking to (same origin by default, or VITE_API_URL when set at build time).
@@ -60,6 +62,7 @@ export default function Sidebar({ section, open, onToggle }) {
             </ul>
           </nav>
           <div className="sidebar-foot">
+            <ConnectionStatus />
             <ThemeToggle />
             <p className="env" title="API host this dashboard reads from">
               <span className="env-label">{import.meta.env.DEV ? 'API host · development' : 'API host'}</span>

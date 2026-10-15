@@ -29,3 +29,10 @@ Frame radius 32px, cards 22px, rows/tiles 12px, controls fully pill-shaped (heig
 
 ## What is deliberately absent
 No search, sort, date-range filters, trend charts or percentage changes: the API supports none of them, so they would be invented. The Overview "composition bar" only sizes page views and clicks by their real totals.
+
+## Demo page
+Built only from the tokens and components above; no new colours or fonts. New pieces, all in `app.css` under "demo": `.btn-primary` (ink pill, the one primary action), `.status-chip` (neutral chip, dot colour plus words carry the state; warning/danger tokens for problems), `.infotip` (tooltip on hover, focus; Esc dismisses), `.browser` (frame around the store iframe), the live activity table (reuses `.table`, `.chip-view`/`.chip-click`), and the "How it works" cards (reuse `.metric-icon` tints).
+
+Delivery status chips: Pending = warning tokens (clock icon), Accepted = sky tint (check icon), Failed = danger tokens (alert icon). Page-view green and click coral keep their meaning, so delivery deliberately does not reuse them. Status is never colour alone.
+
+The sample store is a separate "customer site": its own neutral stylesheet (`backend/public/demo/style.css`), always light, no dashboard tokens. It stays visually quieter than the dashboard around it.

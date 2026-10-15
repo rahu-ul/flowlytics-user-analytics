@@ -4,19 +4,71 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Demo Store — Pricing</title>
+  <meta name="description" content="Demo Store: a sample storefront used to demonstrate Flowlytics tracking.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f5d46'/%3E%3Ctext x='16' y='22' font-size='18' font-family='serif' font-weight='700' text-anchor='middle' fill='white'%3ED%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/demo/style.css">
   <script src="/tracker.js" defer></script>
+  <script src="/demo/store.js" defer></script>
 </head>
 <body>
-  <header><nav><a href="/demo/index.html">Home</a><a href="/demo/pricing.html">Pricing</a></nav></header>
-  <main>
-    <h1>Pricing</h1>
-    <section class="grid">
-      <div class="card"><h3>Starter</h3><p>$9 / month</p><button class="btn">Choose</button></div>
-      <div class="card"><h3>Growth</h3><p>$29 / month</p><button class="btn">Choose</button></div>
-      <div class="card"><h3>Scale</h3><p>$99 / month</p><button class="btn">Choose</button></div>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="brand" href="/demo/index.html"><span class="mark" aria-hidden="true">D</span><span class="brand-name">Demo Store</span></a>
+      <nav class="site-nav" id="site-nav" aria-label="Store">
+        <a href="/demo/index.html#shop">Shop</a>
+        <a href="/demo/index.html#story">Our story</a>
+        <a href="/demo/pricing.html" aria-current="page">Pricing</a>
+      </nav>
+      <div class="tools">
+        
+        <button type="button" class="cart" id="cart" aria-label="Cart, 0 items"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 4h2.2l2 11h10.4l2-8H6.4"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg><span class="cart-label">Cart</span> <span class="cart-count" id="cart-count" aria-hidden="true">0</span></button>
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="i-open" d="M4 7h16M4 12h16M4 17h16"/><path class="i-close" d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" id="main">
+    <section class="page-intro">
+      <p class="eyebrow">Membership</p>
+      <h1>Pricing</h1>
+      <p>Membership plans for regulars. Pick one to see how a plan choice is recorded as a click.</p>
+    </section>
+    <section aria-label="Plans">
+      <div class="plans">
+        <article class="plan">
+          <h2>Starter</h2>
+          <p class="amount">$9 <small>/ month</small></p>
+          <ul><li>Free standard shipping</li><li>Member-only restocks</li></ul>
+          <button type="button" class="btn" data-plan="basic" data-plan-name="Starter">Choose Starter</button>
+        </article>
+        <article class="plan" data-featured="true">
+          <h2>Growth</h2>
+          <p class="amount">$29 <small>/ month</small></p>
+          <ul><li>Free express shipping</li><li>Early access to new arrivals</li></ul>
+          <button type="button" class="btn btn-primary" data-plan="growth" data-plan-name="Growth">Choose Growth</button>
+        </article>
+        <article class="plan">
+          <h2>Scale</h2>
+          <p class="amount">$99 <small>/ month</small></p>
+          <ul><li>Free express shipping and repairs</li><li>Priority support and gift credit</li></ul>
+          <button type="button" class="btn" data-plan="scale" data-plan-name="Scale">Choose Scale</button>
+        </article>
+      </div>
+    </section>
+    <section class="section" aria-label="Plan questions">
+      <div class="perks">
+        <div class="perk"><h3>Cancel any time</h3><p>Plans renew monthly and can be paused or cancelled from your account.</p></div>
+        <div class="perk"><h3>Switch plans</h3><p>Move up or down whenever you like; the change applies to your next month.</p></div>
+      </div>
     </section>
   </main>
-  <footer>© Demo Store</footer>
+  <footer class="site-footer">
+    <div class="wrap foot">
+      <div class="foot-brand"><span class="mark" aria-hidden="true">D</span><div><strong>Demo Store</strong><p>Everyday outdoor basics, made to be used hard.</p></div></div>
+      <nav class="foot-nav" aria-label="Footer"><a href="/demo/index.html#shop">Shop</a><a href="/demo/index.html#story">Our story</a><a href="/demo/pricing.html">Pricing</a></nav>
+      <p class="foot-note">&copy; Demo Store. A sample storefront for the Flowlytics demo. Nothing here is for sale.</p>
+    </div>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

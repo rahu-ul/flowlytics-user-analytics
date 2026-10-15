@@ -5,6 +5,17 @@
  *           (defaults to /api/events on the host that served this file).
  *
  * Tracks: page_view (initial load + SPA navigations) and click (page x/y coordinates).
+ *
+ * Optional observer API (used by the dashboard's Demo page; adds no network traffic and changes nothing
+ * about what is sent):
+ *   var stop = window.cfAnalytics.subscribe(function (record) {...});   // replays this page load's history first
+ *   window.cfAnalytics.requeue(events);                                   // re-send events that failed
+ * record.phase is one of:
+ *   'queued'   { events:[e] }                                    event captured, waiting to be sent
+ *   'beacon'   { events }                                        handed to sendBeacon (page is closing; no reply is observable)
+ *   'sent'     { events, status }                                reply received but unreadable, so storage is unconfirmed
+ *   'accepted' { events, status, accepted, rejected:[{index,error}] }   the API confirmed (rejected = per-event validation errors)
+ *   'failed'   { events, status?, error, willRetry, attempt?, rejected? } network failure or HTTP error
  */
 (function () {
   'use strict';
@@ -52,6 +63,21 @@
     return s.id;
   }
 
+  // ---- observers -----------------------------------------------------------
+  var listeners = [];
+  var records = []; // bounded history so a subscriber that attaches late can catch up
+  var MAX_RECORDS = 200;
+
+  function emit(phase, detail) {
+    var rec = { phase: phase, at: Date.now() };
+    for (var k in detail) if (Object.prototype.hasOwnProperty.call(detail, k)) rec[k] = detail[k];
+    records.push(rec);
+    if (records.length > MAX_RECORDS) records.shift();
+    listeners.slice().forEach(function (fn) {
+      try { fn(rec); } catch (e) { /* an observer must never break the page */ }
+    });
+  }
+
   // ---- sending -------------------------------------------------------------
   var queue = [];
   var timer = null;
@@ -61,7 +87,7 @@
     // text/plain keeps the request "simple" (no CORS preflight) and works with sendBeacon.
     var body = JSON.stringify({ events: batch });
     if (useBeacon && navigator.sendBeacon) {
-      try { if (navigator.sendBeacon(endpoint, body)) return; } catch (e) { /* fall back to fetch */ }
+      try { if (navigator.sendBeacon(endpoint, body)) { emit('beacon', { events: batch }); return; } } catch (e) { /* fall back to fetch */ }
     }
     fetch(endpoint, {
       method: 'POST',
@@ -69,11 +95,28 @@
       body: body,
       keepalive: true,
       credentials: 'omit',
-    }).then(function () {
+    }).then(function (res) {
       failures = 0;
-    }, function () {
+      var status = res && res.status;
+      var ok = !res || res.ok !== false;
+      if (!res || typeof res.json !== 'function') {
+        emit(ok ? 'sent' : 'failed', { events: batch, status: status, error: ok ? undefined : 'HTTP ' + status, willRetry: false });
+        return;
+      }
+      return res.json().then(function (j) { return j; }, function () { return null; }).then(function (j) {
+        var rejected = j && Array.isArray(j.rejected) ? j.rejected : [];
+        if (ok) {
+          emit('accepted', { events: batch, status: status, accepted: j && typeof j.accepted === 'number' ? j.accepted : null, rejected: rejected });
+        } else {
+          // HTTP errors are not retried (same as before): 4xx will not succeed on retry and the batch is dropped.
+          emit('failed', { events: batch, status: status, error: (j && j.error) || 'HTTP ' + status, willRetry: false, rejected: rejected });
+        }
+      });
+    }, function (err) {
       // Network failure: retry a limited number of times, then drop (analytics must never break the page).
-      if (++failures <= MAX_RETRIES && queue.length < MAX_QUEUE) {
+      var retry = ++failures <= MAX_RETRIES && queue.length < MAX_QUEUE;
+      emit('failed', { events: batch, error: (err && err.message) || 'Network error', willRetry: retry, attempt: failures });
+      if (retry) {
         queue = batch.concat(queue);
         schedule(5000 * failures);
       }
@@ -92,6 +135,7 @@
   function enqueue(event) {
     if (queue.length >= MAX_QUEUE) queue.shift();
     queue.push(event);
+    emit('queued', { events: [event] });
     if (queue.length >= 20) flush(false);
     else schedule(FLUSH_DELAY_MS);
   }
@@ -161,7 +205,19 @@
     if (document.visibilityState === 'hidden') flush(true);
   });
 
-  window.cfAnalytics = { flush: function () { flush(false); } };
+  window.cfAnalytics = {
+    flush: function () { flush(false); },
+    subscribe: function (fn) {
+      if (typeof fn !== 'function') return function () {};
+      records.slice().forEach(function (rec) { try { fn(rec); } catch (e) { /* ignore */ } });
+      listeners.push(fn);
+      return function () { listeners = listeners.filter(function (l) { return l !== fn; }); };
+    },
+    // Re-sends events that previously failed (same payload, same timestamp). Validation rejects will fail again.
+    requeue: function (events) {
+      (events || []).forEach(function (e) { if (e && typeof e === 'object') enqueue(e); });
+    },
+  };
 
   trackPageView();
 })();

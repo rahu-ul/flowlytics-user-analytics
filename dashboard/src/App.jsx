@@ -5,6 +5,7 @@ import { EmptyState } from './components/ui/States.jsx';
 import OverviewView from './views/OverviewView.jsx';
 import SessionsView from './views/SessionsView.jsx';
 import HeatmapView from './views/HeatmapView.jsx';
+import DemoView from './views/DemoView.jsx';
 
 function NotFound() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
   if (section === 'overview') view = <OverviewView />;
   else if (section === 'sessions') view = <SessionsView route={route} />;
   else if (section === 'heatmaps') view = <HeatmapView route={route} />;
+  else if (section === 'demo') view = <DemoView />;
   else view = <NotFound />;
 
   return <AppShell section={section} routeKey={route.segs.join('/')}>{view}</AppShell>;
